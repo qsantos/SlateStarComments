@@ -7,6 +7,30 @@ var commentCountText, commentsList, divDiv;
 
 
 
+// *** General utility functions
+
+function $$(selector, context) {
+  /* Return descendant of `context` matching the given `selector` */
+  // inspired from http://libux.co/useful-function-making-queryselectorall-like-jquery/
+  context = context || document;
+  if (!context.querySelectorAll) {
+    return [];
+  }
+  var elements = context.querySelectorAll(selector);
+  return Array.prototype.slice.call(elements);
+}
+
+function $(selector, context) {
+  /* Return first descendant of `context` matching the given `selector` */
+  context = context || document;
+  if (!context.querySelector) {
+    return undefined;
+  }
+  return context.querySelector(selector);
+}
+
+
+
 // *** Date utility functions
 
 function time_fromHuman(string) {
@@ -47,24 +71,23 @@ function time_toHuman(time) {
 // *** Sets up borders and populates comments list
 
 function border(since, updateTitle) {
-  var commentList = document.querySelectorAll('.commentholder');
   var mostRecent = since;
   var newComments = [];
 
   // Walk comments, setting borders as appropriate and saving new comments in a list
-  for(var i = 0; i < commentList.length; ++i) {
-    var postTime = time_fromHuman(commentList[i].querySelector('.comment-meta a').textContent);
+  $$('.commentholder').forEach(function(comment) {
+    var postTime = time_fromHuman($('.comment-meta a', comment).textContent);
     if (postTime > since) {
-      commentList[i].classList.add('new-comment');
-      newComments.push({time: postTime, ele: commentList[i]});
+      comment.classList.add('new-comment');
+      newComments.push({time: postTime, ele: comment});
       if (postTime > mostRecent) {
         mostRecent = postTime;
       }
     }
     else {
-      commentList[i].classList.remove('new-comment');
+      comment.classList.remove('new-comment');
     }
-  }
+  });
   var newCount = newComments.length;
 
   // Maybe add new comment count to title
@@ -78,14 +101,14 @@ function border(since, updateTitle) {
   if (newCount > 0 ) {
     divDiv.style.display = 'block';
     newComments.sort(function(a, b){return a.time - b.time;});
-    for(i = 0; i < newCount; ++i) {
-      var ele = newComments[i].ele;
+    newComments.forEach(function(comment) {
+      var ele = comment.ele;
       var newLi = document.createElement('li');
-      newLi.innerHTML = ele.querySelector('cite').textContent + ' <span class="comments-date">' + time_toHuman(newComments[i].time) + '</span>';
+      newLi.innerHTML = $('cite', ele).textContent + ' <span class="comments-date">' + time_toHuman(comment.time) + '</span>';
       newLi.className = 'comment-list-item';
       newLi.addEventListener('click', function(ele){return function(){ele.scrollIntoView(true);};}(ele));
       commentsList.appendChild(newLi);
-    }
+    });
   }
   else {
     divDiv.style.display = 'none';
@@ -98,8 +121,8 @@ function border(since, updateTitle) {
 
 function commentToggle() {
   var myComment = this.parentElement.parentElement;
-  var myBody = myComment.querySelector('div.comment-body');
-  var myMeta = myComment.querySelector('div.comment-meta');
+  var myBody = $('div.comment-body', myComment);
+  var myMeta = $('div.comment-meta', myComment);
   var myChildren = myComment.nextElementSibling;
   if(this.textContent == 'Hide') {
     this.textContent = 'Show';
@@ -254,10 +277,8 @@ function makeShowHideNewTextParentLinks() {
   // *** Add ~new~ to comments
   // *** Add link to parent comment
 
-  var comments = document.querySelectorAll('li.comment');
-
-  for(var i=0; i<comments.length; ++i) {
-    var commentHolder = comments[i].querySelector('div.commentholder');
+  $$('li.comment').forEach(function(comment) {
+    var commentHolder = $('div.commentholder', comment);
 
     // Show/Hide
     var hideLink = document.createElement('a');
@@ -278,12 +299,12 @@ function makeShowHideNewTextParentLinks() {
     newText.className = 'new-text';
     newText.textContent = '~new~';
 
-    var meta = commentHolder.querySelector('div.comment-meta');
+    var meta = $('div.comment-meta', commentHolder);
     meta.appendChild(newText);
 
     // Parent link
-    if(comments[i].parentElement.tagName === 'UL') {
-      var parent = comments[i].parentElement.parentElement;
+    if(comment.parentElement.tagName === 'UL') {
+      var parent = comment.parentElement.parentElement;
       var parentID = parent.firstElementChild.id;
 
       var parentLink = document.createElement('a');
@@ -293,7 +314,7 @@ function makeShowHideNewTextParentLinks() {
       parentLink.title = 'Parent comment';
       parentLink.textContent = '↑';
 
-      var replyEle = commentHolder.querySelector('div.reply');
+      var replyEle = $('div.reply', commentHolder);
       replyEle.appendChild(document.createTextNode(' '));
       replyEle.appendChild(parentLink);
     }
@@ -310,11 +331,11 @@ function makeShowHideNewTextParentLinks() {
     };
     replyEle.appendChild(document.createTextNode(' '));
     replyEle.appendChild(newerLink);
-  }
+  });
 }
 
 // Run on pages with comments
-if (document.querySelector('#comments')) {
+if ($('#comments')) {
   makeHighlight();
   makeShowHideNewTextParentLinks();
 }
@@ -324,7 +345,7 @@ if (document.querySelector('#comments')) {
 
 
 
-// ??
+// http://slatestarcodex.com/2015/03/31/rational-orthography-2/
 function boustrophedon(justChars, context) {
   function mangle(ele) {
     ele.style.textAlign = 'justify';
@@ -359,17 +380,13 @@ function boustrophedon(justChars, context) {
     }
   }
 
-  var ps = context.querySelectorAll('div.pjgm-postcontent > p');
-  for(var i=0; i<ps.length; ++i) {
-    mangle(ps[i]);
-  }
+  $$('div.pjgm-postcontent > p', context).forEach(mangle);
 }
 
 
 
-var posts = document.querySelectorAll('div.post');
-for(var i = 0; i < posts.length; ++i) {
-  if(posts[i].querySelector('span#boustrophedon')) {
-    boustrophedon(false, posts[i]);
+$$('div.post').forEach(function(post) {
+  if($('span#boustrophedon', post)) {
+    boustrophedon(false, post);
   }
-}
+});
