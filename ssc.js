@@ -358,51 +358,45 @@ if ($('#comments')) {
 
 
 
+// *** Boustrophedon: alternate reading direction of lines */
+// see http://slatestarcodex.com/2015/03/31/rational-orthography-2/
 
+function boustropheon(paragraph) {
+  /* Apply boustrophedon transformation to given `paragraph` */
 
+  paragraph.style.textAlign = 'justify';
+  paragraph.style.position = 'relative';
+  var compStyle = getComputedStyle(paragraph);
+  var lineHeight = compStyle.lineHeight;
+  lineHeight = parseInt(lineHeight.substring(0, lineHeight.length-2));
+  var height = compStyle.height;
+  height = parseInt(height.substring(0, height.length-2));
 
-// http://slatestarcodex.com/2015/03/31/rational-orthography-2/
-function boustrophedon(justChars, context) {
-  function mangle(ele) {
-    ele.style.textAlign = 'justify';
-    ele.style.position = 'relative';
-    var compStyle = getComputedStyle(ele);
-    var lineHeight = compStyle.lineHeight;
-    lineHeight = parseInt(lineHeight.substring(0, lineHeight.length-2));
-    var height = compStyle.height;
-    height = parseInt(height.substring(0, height.length-2));
+  var lines = height / lineHeight;
 
-    var lines = height / lineHeight;
-
-    var backbase = ele.cloneNode(true);
-    backbase.style.position = 'absolute';
-    backbase.style.top = '0px';
-    backbase.style.left = '0px';
-    if(justChars) {
-      backbase.style.unicodeBidi = 'bidi-override';
-      backbase.style.direction = 'rtl';
-    }
-    else {
-      backbase.style.transform = 'scale(-1, 1)';
-      backbase.style['-webkit-transform'] = 'scale(-1, 1)';
-    }
-    backbase.style.background = 'white';
-
-
-    for(var i=1; i<lines; i+=2) {
-      var copy = backbase.cloneNode(true);
-      copy.style.clip = 'rect(' + i*lineHeight + 'px, auto, ' + (i+1)*lineHeight + 'px, auto)';
-      ele.appendChild(copy);
-    }
+  var backbase = paragraph.cloneNode(true);
+  backbase.style.position = 'absolute';
+  backbase.style.top = '0px';
+  backbase.style.left = '0px';
+  if (false) {  // justChars
+    backbase.style.unicodeBidi = 'bidi-override';
+    backbase.style.direction = 'rtl';
   }
+  else {
+    backbase.style.transform = 'scale(-1, 1)';
+    backbase.style['-webkit-transform'] = 'scale(-1, 1)';
+  }
+  backbase.style.background = 'white';
 
-  $$('div.pjgm-postcontent > p', context).forEach(mangle);
+  for (var i=1; i<lines; i+=2) {
+    var copy = backbase.cloneNode(true);
+    copy.style.clip = 'rect(' + i*lineHeight + 'px, auto, ' + (i+1)*lineHeight + 'px, auto)';
+    paragraph.appendChild(copy);
+  }
 }
 
-
-
-$$('div.post').forEach(function(post) {
-  if($('span#boustrophedon', post)) {
-    boustrophedon(false, post);
-  }
+// Run on posts with #boustrophedon marker
+$$('#boustrophedon').forEach(function(marker) {
+  var post = marker.parentNode.parentNode;
+  $$('p', post).forEach(boustropheon);
 });
