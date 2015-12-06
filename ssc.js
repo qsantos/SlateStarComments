@@ -107,7 +107,8 @@ function comment_go(comment) {
 
 // *** Sets up borders and populates comments list
 
-function border(since, updateTitle) {
+function comment_selectSince(since) {
+  /* Select and list comments published since `since` */
   var mostRecent = since;
   var newComments = [];
 
@@ -127,15 +128,10 @@ function border(since, updateTitle) {
   });
   var newCount = newComments.length;
 
-  // Maybe add new comment count to title
-  if (updateTitle) {
-    document.title = '(' + newCount + ') ' + document.title;
-  }
-
   // Populate the floating comment list
   commentCountText.data = '' + newCount + ' comment' + (newCount == 1 ? '' : 's') + ' since ';
   commentsList.textContent = '';
-  if (newCount > 0 ) {
+  if (newCount > 0) {
     divDiv.style.display = 'block';
     newComments.sort(function(a, b){return a.time - b.time;});
     newComments.forEach(function(comment) {
@@ -152,7 +148,6 @@ function border(since, updateTitle) {
   }
   return mostRecent;
 }
-
 
 // *** Toggles visibility of comment which invoked it
 
@@ -183,11 +178,11 @@ function commentToggle() {
 }
 
 
-// ** Set up highlights on first run
 
-function makeHighlight() {
-  // *** Inject some css used by the floating list
+function newCommentList_init() {
+  /* Set up comment list and highlighting */
 
+  // Inject some css used by the floating list
   var styleEle = document.createElement('style');
   styleEle.type = 'text/css';
   styleEle.textContent = '.new-comment { border: 2px solid #5a5; }' +
@@ -244,7 +239,7 @@ function makeHighlight() {
       );
       return;
     }
-    border(newDate, false);
+    comment_selectSince(newDate);
   });
   dateInput.addEventListener('keypress', function(e) {
     if (e.keyCode === 13) {
@@ -304,7 +299,7 @@ function makeHighlight() {
     lastVisit = 0; // prehistory! Actually 1970, which predates all SSC comments, so we're good.
   }
   dateInput.value = time_toHuman(lastVisit);
-  var mostRecent = border(lastVisit, false);
+  var mostRecent = comment_selectSince(lastVisit);
   localStorage[pathString] = mostRecent;
 }
 
@@ -364,7 +359,7 @@ function makeShowHideNewTextParentLinks() {
       var dateInput = $('.date-input');
       var time = comment_time(comment);
       dateInput.value = time_toHuman(time);
-      border(time, false);
+      comment_selectSince(time);
     };
     replyEle.appendChild(document.createTextNode(' '));
     replyEle.appendChild(newerLink);
@@ -373,7 +368,7 @@ function makeShowHideNewTextParentLinks() {
 
 // Run on pages with comments
 if ($('#comments')) {
-  makeHighlight();
+  newCommentList_init();
   makeShowHideNewTextParentLinks();
 }
 
