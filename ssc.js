@@ -103,6 +103,18 @@ function comment_go(comment) {
   comment.scrollIntoView({block: "start", behavior: "smooth"});
 }
 
+function comment_toggleVisibility(comment) {
+  /* Toggle visbility of `comment` */
+  if (comment_isHidden(comment)) {
+    comment.classList.remove('hidden-comment');
+    $('.comment-toggle-link', comment).textContent = 'Hide';
+  }
+  else {
+    comment.classList.add('hidden-comment');
+    $('.comment-toggle-link', comment).textContent = 'Show';
+  }
+}
+
 
 
 // *** Sets up borders and populates comments list
@@ -149,36 +161,6 @@ function comment_selectSince(since) {
   return mostRecent;
 }
 
-// *** Toggles visibility of comment which invoked it
-
-function commentToggle() {
-  var myComment = this.parentElement.parentElement;
-  var myBody = $('div.comment-body', myComment);
-  var myMeta = $('div.comment-meta', myComment);
-  var myChildren = myComment.nextElementSibling;
-  if(this.textContent == 'Hide') {
-    this.textContent = 'Show';
-    myComment.style.opacity = '.6';
-    myBody.style.display = 'none';
-    myMeta.style.display = 'none';
-    if(myChildren) {
-      myChildren.style.display = 'none';
-    }
-  }
-  else {
-    this.textContent = 'Hide';
-    myComment.style.opacity = '1';
-    myBody.style.display = 'block';
-    myMeta.style.display = 'block';
-    if(myChildren) {
-      myChildren.style.display = 'block';
-    }
-  }
-  myComment.scrollIntoView(true);
-}
-
-
-
 function newCommentList_init() {
   /* Set up comment list and highlighting */
 
@@ -186,6 +168,8 @@ function newCommentList_init() {
   var styleEle = document.createElement('style');
   styleEle.type = 'text/css';
   styleEle.textContent = '.new-comment { border: 2px solid #5a5; }' +
+  '.hidden-comment { opacity: .6; }' +
+  '.hidden-comment .comment-meta, .hidden-comment .comment-body, .hidden-comment>.children { display: none; }' +
   '.new-text { color: #C5C5C5; display: none; }' +
   '.new-comment .new-text { display: inline; }' +
   '.comments-floater { position: fixed; right: 4px; top: 4px; padding: 2px 5px; font-size: 14px; border-radius: 5px; background: rgba(250, 250, 250, 0.90); }' +
@@ -314,12 +298,12 @@ function makeShowHideNewTextParentLinks() {
 
     // Show/Hide
     var hideLink = document.createElement('a');
-    hideLink.className = 'comment-reply-link';
+    hideLink.className = 'comment-toggle-link';
     hideLink.style.textDecoration = 'underline';
     hideLink.style.cursor = 'pointer';
     hideLink.textContent = 'Hide';
 
-    hideLink.addEventListener('click', commentToggle);
+    hideLink.addEventListener('click', function(e) { comment_toggleVisibility(e.target.parentNode.parentNode.parentNode); });
 
     var divs = commentHolder.children;
     var replyEle = divs[divs.length-1];
