@@ -288,72 +288,73 @@ function newCommentList_init() {
 }
 
 
-function makeShowHideNewTextParentLinks() {
-  // *** Add buttons to show/hide threads
-  // *** Add ~new~ to comments
-  // *** Add link to parent comment
 
-  $$('li.comment').forEach(function(comment) {
-    var commentHolder = $('div.commentholder', comment);
+// *** Comment tool links
 
-    // Show/Hide
-    var hideLink = document.createElement('a');
-    hideLink.className = 'comment-toggle-link';
-    hideLink.style.textDecoration = 'underline';
-    hideLink.style.cursor = 'pointer';
-    hideLink.textContent = 'Hide';
+function comment_actionHide(comment) {
+  /* Create Hide/Show action link for `comment` */
+  var hideLink = document.createElement('a');
+  hideLink.className = 'comment-toggle-link';
+  hideLink.style.textDecoration = 'underline';
+  hideLink.style.cursor = 'pointer';
+  hideLink.textContent = 'Hide';
+  hideLink.addEventListener('click', function(e) { comment_toggleVisibility(comment); });
+  return hideLink;
+}
 
-    hideLink.addEventListener('click', function(e) { comment_toggleVisibility(e.target.parentNode.parentNode.parentNode); });
+function comment_actionParent(comment) {
+  /* Create parent action link for `comment` */
+  var parentLink = document.createElement('a');
+  parentLink.href = '#comment-' + comment_id(comment_parent(comment));
+  parentLink.className = 'comment-reply-link';
+  parentLink.style.textDecoration = 'underline';
+  parentLink.title = 'Parent comment';
+  parentLink.textContent = '↑';
+  return parentLink;
+}
 
-    var divs = commentHolder.children;
-    var replyEle = divs[divs.length-1];
+function comment_actionNewer(comment) {
+  /* Create newer action link for `comment` */
+  var newerLink = document.createElement('a');
+  newerLink.textContent = 'Newer';
+  newerLink.style.textDecoration = 'underline';
+  newerLink.onclick = function(e) {
+    var time = comment_time(comment);
+    $('.date-input').value = time_toHuman(time);
+    comment_selectSince(time);
+  };
+  return newerLink;
+}
 
-    replyEle.appendChild(hideLink);
+function comment_addActions(comment) {
+  /* Add more actions to `comment` */
+  var replyEle = $('.reply', comment);
 
-    // ~new~
-    var newText = document.createElement('span');
-    newText.className = 'new-text';
-    newText.textContent = '~new~';
+  // hide/show action
+  replyEle.appendChild(document.createTextNode(' '));
+  replyEle.appendChild(comment_actionHide(comment));
 
-    var meta = $('div.comment-meta', commentHolder);
-    meta.appendChild(newText);
+  // newer action
+  replyEle.appendChild(document.createTextNode(' '));
+  replyEle.appendChild(comment_actionNewer(comment));
 
-    // Parent link
-    if(comment.parentElement.tagName === 'UL') {
-      var parent = comment.parentElement.parentElement;
-      var parentID = parent.firstElementChild.id;
-
-      var parentLink = document.createElement('a');
-      parentLink.href = '#' + parentID;
-      parentLink.className = 'comment-reply-link';
-      parentLink.style.textDecoration = 'underline';
-      parentLink.title = 'Parent comment';
-      parentLink.textContent = '↑';
-
-      var replyEle = $('div.reply', commentHolder);
-      replyEle.appendChild(document.createTextNode(' '));
-      replyEle.appendChild(parentLink);
-    }
-
-    // Newer comments
-    var newerLink = document.createElement('a');
-    newerLink.textContent = 'Newer';
-    newerLink.style.textDecoration = 'underline';
-    newerLink.onclick = function(e) {
-      var dateInput = $('.date-input');
-      var time = comment_time(comment);
-      dateInput.value = time_toHuman(time);
-      comment_selectSince(time);
-    };
+  // parent action
+  if (comment.parentElement.tagName === 'UL') {
     replyEle.appendChild(document.createTextNode(' '));
-    replyEle.appendChild(newerLink);
-  });
+    replyEle.appendChild(comment_actionParent(comment));
+  }
+
+  // ~new~ marker (not an action)
+  var newText = document.createElement('span');
+  newText.className = 'new-text';
+  newText.textContent = '~new~';
+  $('div.comment-meta', comment).appendChild(newText);
 }
 
 // Run on pages with comments
 if ($('#comments')) {
   newCommentList_init();
-  makeShowHideNewTextParentLinks();
+  $$('.comment').forEach(comment_addActions);
 }
 
 
