@@ -9,6 +9,13 @@ var commentCountText, commentsList, divDiv;
 
 // *** General utility functions
 
+function remove(node) {
+  /* Remove HTML `node` */
+  if (node.parentNode) {
+    node.parentNode.removeChild(node);
+  }
+}
+
 function $$(selector, context) {
   /* Return descendant of `context` matching the given `selector` */
   // inspired from http://libux.co/useful-function-making-queryselectorall-like-jquery/
@@ -548,11 +555,160 @@ function commentNavigation(e) {
   e.preventDefault();
 }
 
+function views_init() {
+  /* Initialize Normal/Reading/Comments views */
+  var backup = document.head.innerHTML;
+
+  // style for the view selector
+  var style_viewSelector = document.createElement('style');
+  style_viewSelector.textContent = '' +
+  '#view-mode {' +
+  '  list-style: none;' +
+  '  text-align: center;' +
+  '  margin: 1em;' +
+  '  font-size: x-large;' +
+  '}' +
+  '#view-mode li {' +
+  '  display: inline-block;' +
+  '  width: 30%;' +
+  '  cursor: pointer;' +
+  '  padding: .5em 0;' +
+  '  border-top: 1px solid transparent;' +
+  '  border-bottom: 1px solid transparent;' +
+  '}' +
+  '#view-mode li:hover {' +
+  '  border-top: 1px solid black;' +
+  '  border-bottom: 1px solid black;' +
+  '}' +
+  '';
+  document.head.appendChild(style_viewSelector);
+
+  // common minimal view
+  var style_minimal = document.createElement('style');
+  style_minimal.textContent = '' +
+  'body {' +
+  '  margin: 0 auto;' +
+  '  font-size: x-large;' +
+  '  font-family: sans-serif;' +
+  '  line-height: 1.7em;' +
+  '  color: #333;' +
+  '  background-color: #eee;' +
+  '}' +
+  '.pjgm-posttitle { ' +
+  '  font-size: 2em !important;' +
+  '  text-align: center;' +
+  '  text-transform: none !important;' +
+  '}' +
+  'blockquote {' +
+  '  font-size: inherit;' +
+  '  font-family: inherit;' +
+  '  font-style: inherit;' +
+  '  line-height: inherit;' +
+  '}' +
+  'blockquote::before {' +
+  '  float: left;' +
+  '  line-height: 0;' +
+  '  margin-left: -.8em;' +
+  '  margin-top: 0.3em;' +
+  '  content: "“";' +
+  '  color: #999;' +
+  '  font-family: "Times New Roman",serif;' +
+  '  font-size: 4em;' +
+  '}' +
+  'blockquote > :last-child::after {' +
+  '  display: inline-block;' +
+  '  line-height: 0;' +
+  '  position: relative;' +
+  '  top: 0.5em;' +
+  '  margin-left: 0.1em;' +
+  '  margin-top: -1.5em;' +
+  '  content: "”";' +
+  '  color: #999;' +
+  '  font-family: "Times New Roman",serif;' +
+  '  font-size: 4em;' +
+  '}' +
+  '#pjgm-header, #pjgm-footer, #left-sidebar, #primary, #pjgm-navbelow, .pjgm-postutility, .sharedaddy {' +
+  '  display: none;' +
+  '}' +
+  'html, #pjgm-wrap, #pjgm-main, #pjgm-box, #pjgm-content, .post, #comments, #respond, .pjgm-postmeta, .pjgm-postmeta a {' +
+  '  margin: 0;' +
+  '  padding: 0 !important;' +
+  '  width: auto;' +
+  '  float: inherit;' +
+  '  color: inherit;' +
+  '  font: inherit;' +
+  '  background: inherit;' +
+  '  box-shadow: none;' +
+  '  border: none; ' +
+  '}' +
+  '';
+
+  // post view
+  var style_post = document.createElement('style');
+  style_post.textContent = '' +
+  'body {' +
+  '  max-width: 30em;' +
+  '}' +
+  '#respond, #comments, .comments-floater {' +
+  '  display: none;' +
+  '}' +
+  '';
+
+  // comment view
+  var style_comments = document.createElement('style');
+  style_comments.textContent = '' +
+  'body {' +
+  '  max-width: 40em;' +
+  '}' +
+  '.comment {' +
+  '  max-width: 30em;' +
+  '}' +
+  '.post {' +
+  '  display: none;' +
+  '}' +
+  '';
+
+  // create view selector
+  var views = document.createElement('ul');
+  views.id = 'view-mode';
+
+  var normal = document.createElement('li');
+  normal.textContent = 'Normal';
+  normal.onclick = function(e) {
+    remove(style_minimal);
+    remove(style_post);
+    remove(style_comments);
+  };
+  views.appendChild(normal);
+
+  var read = document.createElement('li');
+  read.textContent = 'Read';
+  read.onclick = function(e) {
+    remove(style_comments);
+    document.head.appendChild(style_minimal);
+    document.head.appendChild(style_post);
+  };
+  views.appendChild(read);
+
+  var comment = document.createElement('li');
+  comment.textContent = 'Comments';
+  comment.onclick = function(e) {
+    remove(style_post);
+    document.head.appendChild(style_minimal);
+    document.head.appendChild(style_comments);
+  };
+  views.appendChild(comment);
+
+  var a = $('#pjgm-content');
+  a.insertBefore(views, a.firstChild);
+}
+
 // Run on pages with comments
 if ($('#comments')) {
   newCommentList_init();
   $$('.comment').forEach(comment_addActions);
   document.addEventListener('keydown', commentNavigation);
+  views_init();
 }
 
 
