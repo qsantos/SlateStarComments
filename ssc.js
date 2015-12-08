@@ -68,6 +68,43 @@ function time_toHuman(time) {
 
 
 
+// *** Comment utility functions
+
+function comment_id(comment) {
+  /* Return HTML identifier of `comment` */
+  return comment.id.split('-').pop();
+}
+
+function comment_author(comment) {
+  /* Return author of `comment` */
+  return $('cite', comment).textContent;
+}
+
+function comment_time(comment) {
+  /* Return publication date of `comment` */
+  return time_fromHuman($('.comment-meta a', comment).textContent);
+}
+
+function comment_isHidden(comment) {
+  /* Return whether `comment` is shown */
+  return comment.classList.contains('hidden-comment');
+}
+
+function comment_go(comment) {
+  /* Focus on `comment` */
+  if (!comment) {
+    return;
+  }
+
+  var scrollX = window.scrollX, scrollY = window.scrollY;
+  location.replace('#comment-' + comment_id(comment));
+  // redo the scroll, smoothly (Firefox only)
+  window.scroll(scrollX, scrollY);
+  comment.scrollIntoView({block: "start", behavior: "smooth"});
+}
+
+
+
 // *** Sets up borders and populates comments list
 
 function border(since, updateTitle) {
@@ -76,7 +113,7 @@ function border(since, updateTitle) {
 
   // Walk comments, setting borders as appropriate and saving new comments in a list
   $$('.commentholder').forEach(function(comment) {
-    var postTime = time_fromHuman($('.comment-meta a', comment).textContent);
+    var postTime = comment_time(comment);
     if (postTime > since) {
       comment.classList.add('new-comment');
       newComments.push({time: postTime, ele: comment});
@@ -104,7 +141,7 @@ function border(since, updateTitle) {
     newComments.forEach(function(comment) {
       var ele = comment.ele;
       var newLi = document.createElement('li');
-      newLi.innerHTML = $('cite', ele).textContent + ' <span class="comments-date">' + time_toHuman(comment.time) + '</span>';
+      newLi.innerHTML = comment_author(comment.ele) + ' <span class="comments-date">' + time_toHuman(comment.time) + '</span>';
       newLi.className = 'comment-list-item';
       newLi.addEventListener('click', function(ele){return function(){ele.scrollIntoView(true);};}(ele));
       commentsList.appendChild(newLi);
@@ -325,7 +362,7 @@ function makeShowHideNewTextParentLinks() {
     newerLink.style.textDecoration = 'underline';
     newerLink.onclick = function(e) {
       var dateInput = $('.date-input');
-      var time = time_fromHuman($('.comment-meta a', comment).textContent);
+      var time = comment_time(comment);
       dateInput.value = time_toHuman(time);
       border(time, false);
     };
