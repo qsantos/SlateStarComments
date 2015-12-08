@@ -117,6 +117,103 @@ function comment_toggleVisibility(comment) {
 
 
 
+// *** Functions to navigate comments
+
+function comment_firstChild(comment) {
+  /* Return first immediate child of `comment` */
+  comment = comment || $('#comments');
+
+  if (comment_isHidden(comment)) {
+    return undefined;
+  }
+
+  return $('.comment', comment);
+}
+
+function comment_lastChild(comment) {
+  /* Return last immediate child of `comment` */
+  comment = comment || $('#comments');
+
+  if (comment_isHidden(comment)) {
+    return undefined;
+  }
+
+  return $$('#' + comment.id + '>*>.comment', comment).pop();
+}
+
+function comment_firstDescendant(comment) {
+  /* Return first descendant of `comment` */
+  return comment_firstChild(comment);
+}
+
+function comment_lastDescendant(comment) {
+  /* Return last descendant of `comment` */
+  var lastChild = comment_lastChild(comment);
+  return lastChild ? comment_lastDescendant(lastChild) : comment;
+}
+
+function comment_nextSibling(comment) {
+  /* Return next comment of the thread at the same depth */
+  // ~ instead of + because pingbacks interleaved with comments
+  return $('#' + comment.id + ' ~ .comment');
+}
+
+function comment_previousSibling(comment) {
+  /* Return previous comment of the thread at the same depth */
+  // no CSS selector so we do it by hand
+  for (var sibling = comment.previousSibling; sibling; sibling = sibling.previousSibling) {
+    if (sibling.classList && sibling.classList.contains('comment')) {
+      return sibling;
+    }
+  }
+  return undefined;
+}
+
+function comment_parent(comment) {
+  /* Return parent of `comment` */
+  var parent = comment.parentNode.parentNode;
+  if (parent.classList.contains('comment')) {
+    return parent;
+  }
+  return undefined;
+}
+
+function comment_nextThread(comment) {
+  /* Return next thread */
+  if (!comment) {
+    return undefined;
+  }
+
+  // either next sibling or parent's next thread
+  return comment_nextSibling(comment) || comment_nextThread(comment_parent(comment));
+}
+
+function comment_previousThread(comment) {
+  /* Return previous thread */
+  var sibling = comment_previousSibling(comment);
+  if (!sibling) {
+    return undefined;
+  }
+
+  if (comment_isHidden(sibling)) {
+    return sibling;
+  }
+
+  return comment_lastDescendant(sibling) || sibling;
+}
+
+function comment_next(comment) {
+  /* Return visually succeeding comment */
+  return comment_firstChild(comment) || comment_nextThread(comment);
+}
+
+function comment_previous(comment) {
+  /* Return visually preceding comment */
+  return comment_previousThread(comment) || comment_parent(comment);
+}
+
+
+
 // *** Sets up borders and populates comments list
 
 function comment_selectSince(since) {
@@ -305,8 +402,14 @@ function comment_actionHide(comment) {
 
 function comment_actionParent(comment) {
   /* Create parent action link for `comment` */
+
+  var parent = comment_parent(comment);
+  if (!parent) {
+    return;
+  }
+
   var parentLink = document.createElement('a');
-  parentLink.href = '#comment-' + comment_id(comment_parent(comment));
+  parentLink.href = '#comment-' + comment_id(parent);
   parentLink.className = 'comment-reply-link';
   parentLink.style.textDecoration = 'underline';
   parentLink.title = 'Parent comment';
@@ -336,9 +439,10 @@ function comment_addActions(comment) {
   replyEle.appendChild(comment_actionNewer(comment));
 
   // parent action
-  if (comment.parentElement.tagName === 'UL') {
+  var actionParent = comment_actionParent(comment);
+  if (actionParent) {
     replyEle.appendChild(document.createTextNode(' '));
-    replyEle.appendChild(comment_actionParent(comment));
+    replyEle.appendChild(actionParent);
   }
 
   // ~new~ marker (not an action)
