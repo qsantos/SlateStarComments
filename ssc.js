@@ -124,6 +124,9 @@ function comment_selectSince(since) {
   var mostRecent = since;
   var newComments = [];
 
+  // update input field
+  $('.date-input').value = time_toHuman(since);
+
   // Walk comments, setting borders as appropriate and saving new comments in a list
   $$('.commentholder').forEach(function(comment) {
     var postTime = comment_time(comment);
@@ -282,9 +285,7 @@ function newCommentList_init() {
   if (isNaN(lastVisit)) {
     lastVisit = 0; // prehistory! Actually 1970, which predates all SSC comments, so we're good.
   }
-  dateInput.value = time_toHuman(lastVisit);
-  var mostRecent = comment_selectSince(lastVisit);
-  localStorage[pathString] = mostRecent;
+  localStorage[pathString] = comment_selectSince(lastVisit);
 }
 
 
@@ -318,11 +319,7 @@ function comment_actionNewer(comment) {
   var newerLink = document.createElement('a');
   newerLink.textContent = 'Newer';
   newerLink.style.textDecoration = 'underline';
-  newerLink.onclick = function(e) {
-    var time = comment_time(comment);
-    $('.date-input').value = time_toHuman(time);
-    comment_selectSince(time);
-  };
+  newerLink.onclick = function(e) { comment_selectSince(comment_time(comment)); };
   return newerLink;
 }
 
