@@ -503,6 +503,7 @@ function commentNavigation(e) {
       case 'K': comment_go(comment_previousSibling(comment)); break;
       case 'p': comment_go(comment_parent         (comment)); break;
       case 'm': comment_toggleVisibility(comment); break;
+      case 'n': comment_selectSince(comment_time(comment)); break;
     }
   }
   else {  // no selected comment
