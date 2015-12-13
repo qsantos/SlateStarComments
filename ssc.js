@@ -456,6 +456,31 @@ function comment_addActions(comment) {
 
 // *** Keyboard navigation
 
+function comment_reply(comment) {
+  /* Summon reply form for `comment` */
+
+  // gather comment information
+  var id = comment_id(comment);
+  var author = comment_author(comment);
+
+  // update form information
+  $$('.comment_parent').forEach(function(e) {
+    e.value = id;
+  });
+  $$('.comment-reply-title').forEach(function(e) {
+    e.innerHTML = 'Leave a Reply to <a href="#comment-' + id + '">' + author + '</a>';
+  });
+
+  // insert respond form after comment body
+  $('.comment-body', comment).appendChild($('#respond'));
+
+  // realign view
+  comment_go(comment);
+
+  // focus on textarea
+  $('#comment').focus();
+}
+
 function eventKey(e) {
   /* Return the character of a keyboard event */
 
@@ -504,6 +529,8 @@ function commentNavigation(e) {
       case 'p': comment_go(comment_parent         (comment)); break;
       case 'm': comment_toggleVisibility(comment); break;
       case 'n': comment_selectSince(comment_time(comment)); break;
+      case 'r': comment_reply(comment); break;
+      default: return;
     }
   }
   else {  // no selected comment
@@ -512,8 +539,13 @@ function commentNavigation(e) {
       case 'J':
       case 'g': comment_go(comment_firstChild()); break;
       case 'G': comment_go(comment_lastChild ()); break;
+      default: return;
     }
   }
+
+  // event captured, stop propagation
+  // otherwise, 'r' would appear in the reply form
+  e.preventDefault();
 }
 
 // Run on pages with comments
