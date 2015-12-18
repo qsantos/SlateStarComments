@@ -452,10 +452,74 @@ function comment_addActions(comment) {
   $('div.comment-meta', comment).appendChild(newText);
 }
 
+
+
+// *** Keyboard navigation
+
+function eventKey(e) {
+  /* Return the character of a keyboard event */
+
+  if (e.key) {
+    return e.key;
+  }
+
+  var key = String.fromCharCode(e.keyCode);
+  if (!e.shiftKey) {
+    key = key.toLowerCase();
+  }
+
+  return key;
+}
+
+function commentNavigation(e) {
+  /* Keyboard comment navigation */
+  if (e.keyCode == 27) {
+    document.activeElement.blur();
+    return;
+  }
+
+  if (e.target != document.body) {
+    return;
+  }
+
+  if (e.ctrlKey || e.altKey) {
+    return;
+  }
+
+  var key = eventKey(e);
+
+  var comment = undefined;
+  if (location.hash) {
+    comment = $('#li-' + location.hash.slice(1) + '.comment');
+  }
+
+  if (comment) {
+    switch (key) {  // comment is selected
+      case 'g': comment_go(comment_firstChild     ()); break;
+      case 'G': comment_go(comment_lastChild      ()); break;
+      case 'j': comment_go(comment_next           (comment)); break;
+      case 'J': comment_go(comment_nextSibling    (comment)); break;
+      case 'k': comment_go(comment_previous       (comment)); break;
+      case 'K': comment_go(comment_previousSibling(comment)); break;
+      case 'p': comment_go(comment_parent         (comment)); break;
+      case 'm': comment_toggleVisibility(comment); break;
+    }
+  }
+  else {  // no selected comment
+    switch (key) {
+      case 'j':
+      case 'J':
+      case 'g': comment_go(comment_firstChild()); break;
+      case 'G': comment_go(comment_lastChild ()); break;
+    }
+  }
+}
+
 // Run on pages with comments
 if ($('#comments')) {
   newCommentList_init();
   $$('.comment').forEach(comment_addActions);
+  document.addEventListener('keydown', commentNavigation);
 }
 
 
