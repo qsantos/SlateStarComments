@@ -275,6 +275,7 @@ function newCommentList_init() {
   var styleEle = document.createElement('style');
   styleEle.type = 'text/css';
   styleEle.textContent = '.new-comment { border: 2px solid #5a5; }' +
+  '.commentholder:target { border: 2px solid #55a; }' +
   '.hidden-comment { opacity: .6; }' +
   '.hidden-comment .comment-meta, .hidden-comment .comment-body, .hidden-comment>.children { display: none; }' +
   '.new-text { color: #C5C5C5; display: none; }' +
